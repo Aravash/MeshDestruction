@@ -1,0 +1,13 @@
+﻿# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/modules.xml
+/projectSettingsUpdater.xml
+/.idea.Mesh Deformation.iml
+/contentModel.xml
+# Datasource local storage ignored files
+/../../../../../../../:\GameEngines\Unity\Mesh Deformation\.idea\.idea.Mesh Deformation\.idea/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
