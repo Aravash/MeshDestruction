@@ -34,15 +34,9 @@ public class meshDeformer : MonoBehaviour
     private void Update()
     {
         uniformScale = transform.localScale.x;
-        /*
-        for (int i = 0; i < displacedVertices.Length; i++)
-        {
-            UpdateVertex(i);
-        }*/
 
-        deformingMesh.vertices = displacedVertices;
-        deformingMesh.RecalculateNormals();
-        //GetComponent<MeshCollider>().sharedMesh = deformingMesh;
+        //deformingMesh.vertices = displacedVertices;
+        //deformingMesh.RecalculateNormals();
     }
 
     private void UpdateVertex(int i)
@@ -50,8 +44,8 @@ public class meshDeformer : MonoBehaviour
         Vector3 velocity = vertexVelocities[i];
         Vector3 displacement = displacedVertices[i] - originalVertices[i];
         displacement *= uniformScale;
-        velocity -= displacement * (springForce * Time.deltaTime);
-        velocity *= 1f - damping * Time.deltaTime;
+        velocity -= displacement; //* (springForce * Time.deltaTime);
+        //velocity *= 1f - damping * Time.deltaTime;
         vertexVelocities[i] = velocity;
         if (Vector3.Distance(displacement, initialVertices[i]) <=
             maxDisplacement && wasDisplaced[i] == false)
@@ -59,6 +53,9 @@ public class meshDeformer : MonoBehaviour
             wasDisplaced[i] = true;
             displacedVertices[i] += velocity * (Time.deltaTime / uniformScale);
             originalVertices[i] = displacedVertices[i];
+            
+            deformingMesh.vertices = displacedVertices;
+            deformingMesh.RecalculateNormals();
         }
     }
 
@@ -66,39 +63,29 @@ public class meshDeformer : MonoBehaviour
     {
         Vector3 pointToVertex = displacedVertices[i] - point;
         pointToVertex *= uniformScale;
-        float attenuatedForce = force / (1f + pointToVertex.sqrMagnitude);
-        float velocity = attenuatedForce * Time.deltaTime;
+        float reducedForce = force / (1f + pointToVertex.sqrMagnitude);
+        float velocity = reducedForce * Time.deltaTime;
         vertexVelocities[i] += pointToVertex.normalized * velocity;
     }
-    
+
     public void AddDeformingForce(Vector3 point, float force, float radius_from_point)
     {
         point = transform.InverseTransformPoint(point);
-        float dist;
-        /*
-        Debug.Log(originalVertices.Length+", "+ point+", "+ originalVertices[NearestVertexTo(originalVertices, point) -1]+", "+ NearestVertexTo(originalVertices, point));
-        //add a new vertice(vector3) to the list of displacedVertices
-        originalVertices = AddToArrayAtIndex(point, originalVertices, NearestVertexTo(originalVertices, point));
-        Debug.Log(originalVertices.Length+", "+ point+", "+ originalVertices[NearestVertexTo(originalVertices, point) -1]+", "+ NearestVertexTo(originalVertices, point));
-        
-        //reset the length of the other vertice arrays
-        displacedVertices = new Vector3[originalVertices.Length];
-        vertexVelocities = new Vector3[originalVertices.Length];
-        */
-        Debug.Log("Touched");
+
         for (int i = 0; i < displacedVertices.Length; i++)
         {
-            if ((dist = Vector3.Distance(displacedVertices[i], point)) >= radius_from_point)
+            if ((Vector3.Distance(displacedVertices[i], point)) >= radius_from_point)
             {
                 continue;
             }
             Debug.Log("vertice " + i + " was affected by this");
             AddForceToVertex(i, point, force);
-            UpdateVertex(i); // testing this
+            UpdateVertex(i);
         }
         GetComponent<MeshCollider>().sharedMesh = deformingMesh;
     }
 
+    /*
     public float VolumeOfMesh(Mesh mesh)
     {
         float volume = 0;
@@ -114,6 +101,7 @@ public class meshDeformer : MonoBehaviour
         return Mathf.Abs(volume);
     }
     
+    **code was used for testing**
     public float SignedVolumeOfTriangle(Vector3 p1, Vector3 p2, Vector3 p3)
     {
         float v321 = p3.x * p2.y * p1.z;
@@ -131,7 +119,7 @@ public class meshDeformer : MonoBehaviour
         float volume = VolumeOfMesh(mesh);
         string msg = "The volume of the mesh is " + volume + " cube units.";
         Debug.Log(msg);
-    }
+    }*/
 
     //returns the array position of the nearest vertex to the given point
     //give the array, then the point

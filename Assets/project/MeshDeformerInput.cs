@@ -57,7 +57,6 @@ public class MeshDeformerInput : MonoBehaviour
                 Vector3 point = hit.point;
                 point += hit.normal * (forceOffset * direction);
                 deformer.AddDeformingForce(point, force, Random.Range(local_radius_min,  local_radius_max));
-                //deformer.AddDeformingForce();
             }
         }
     }
