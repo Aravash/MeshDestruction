@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class MeshHitter : MonoBehaviour
 {
-    private int destructableLayer = 1 << 9;
+    private int destructableLayer = 1 << 3;
     public float searchRadius = 3f;
     public float force = 0.1f;
     public GameObject tstprefab;
@@ -27,18 +27,9 @@ public class MeshHitter : MonoBehaviour
             {
                 int i = destructableObject.getNearbyVerticeIndex(hit.point, searchRadius, hit.triangleIndex);
                 Debug.Log("closest index to our hit point is "+ i);
-                Instantiate(tstprefab, hit.point, Quaternion.identity);
 
-                if (i == -1)
-                {
-                    int v = destructableObject.addVertexToPoint(hit.point, hit.triangleIndex);
-                    destructableObject.ChangeSingleVertex(v, transform.position, force);
-                }
-                else
-                {
-                    //transform the object based on an existing vertex
-                    destructableObject.ChangeSimilarVertices(i,transform.position, force);
-                }
+                if (i == -1) return;
+                destructableObject.ChangeSimilarVertices(i,transform.position, force);
             }
             else
             {

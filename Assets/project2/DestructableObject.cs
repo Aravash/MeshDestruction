@@ -1,14 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Vector2 = UnityEngine.Vector2;
+using Vector3 = UnityEngine.Vector3;
 
 //[ExecuteInEditMode]
 public class DestructableObject : MonoBehaviour
 {
     private Mesh cloneMesh;
     private MeshFilter meshFilter;
+    private float uniformScale;
 
     //[HideInInspector]
     public Vector3[] vertices; //for debugging
@@ -17,6 +21,7 @@ public class DestructableObject : MonoBehaviour
     {
         meshFilter = GetComponent<MeshFilter>();
         vertices = meshFilter.mesh.vertices;
+        uniformScale = transform.localScale.x;
     }
     
     
@@ -94,7 +99,7 @@ public class DestructableObject : MonoBehaviour
         List<int> relatedVertices = FindRelatedVertices(targetVertexPos, false);
         foreach (int i in relatedVertices)
         {
-            vertices[i] = targetVertexPos - (playerPos.normalized * force);
+            vertices[i] = targetVertexPos - (playerPos.normalized * (force/uniformScale));
         }
         meshFilter.mesh.vertices = vertices;
         meshFilter.mesh.RecalculateNormals();
@@ -114,19 +119,27 @@ public class DestructableObject : MonoBehaviour
     /// <returns>Returns an integer index on this object's vertex array, or it returns -1 as a null</returns>
     public int getNearbyVerticeIndex(Vector3 point, float searchRadius, int triangleIndex)
     {
+        point = transform.InverseTransformPoint(point);
         int closest = -1;
         float shortest_distance = searchRadius;
-        int i = 0;
 
-        int[] tvs = {triangleIndex + 0, triangleIndex + 1, triangleIndex + 2};
-        foreach (var tv in tvs)
+
+        Mesh mesh = meshFilter.sharedMesh;
+        Vector3[] vertices = mesh.vertices;
+        int[] triangles = mesh.triangles;
+        Vector3[] verts = {vertices[triangles[triangleIndex * 3 + 0]],
+                            vertices[triangles[triangleIndex * 3 + 1]],
+                            vertices[triangles[triangleIndex * 3 + 2]]};
+        int i = triangles[triangleIndex * 3];
+        foreach (var vert in verts)
         {
-            float our_distance = Vector2.Distance(meshFilter.sharedMesh.vertices[tv] + transform.position, point);
+            float our_distance = Vector2.Distance(vert, point);
             if (our_distance < shortest_distance)
             {
                 shortest_distance = our_distance;
-                closest = tv;
+                closest = i;
             }
+            i++;
         }
         return closest;
     }

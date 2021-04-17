@@ -32,7 +32,7 @@ public class MeshDeformerInput : MonoBehaviour
         targetedObject.transform.rotation *= Quaternion.Euler(Input.GetAxisRaw("Mouse Y") * sensitivity,Input.GetAxisRaw("Mouse X") * -sensitivity, 0);
     }
 
-    void VolumeCheck()
+    /*void VolumeCheck()
     {
         Ray inputRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -42,7 +42,7 @@ public class MeshDeformerInput : MonoBehaviour
             meshDeformer deformer = hit.collider.GetComponent<meshDeformer>();
             deformer.TellMeVolume();
         }
-    }
+    }*/
 
     void HandleInput(int direction)
     {

@@ -6,7 +6,7 @@ using UnityEngine;
 public class meshDeformer : MonoBehaviour
 {
     Mesh deformingMesh;
-    Vector3[] originalVertices, displacedVertices, initialVertices;
+    Vector3[] currentVertices, displacedVertices, initialVertices;
     private bool[] wasDisplaced;
 
     private Vector3[] vertexVelocities;
@@ -19,53 +19,41 @@ public class meshDeformer : MonoBehaviour
     private void Start()
     {
         deformingMesh = GetComponent<MeshFilter>().mesh;
-        originalVertices = deformingMesh.vertices;
-        initialVertices = originalVertices;
-        wasDisplaced = new bool[originalVertices.Length];
-        displacedVertices = new Vector3[originalVertices.Length];
-        for (int i = 0; i < originalVertices.Length; i++)
+        currentVertices = deformingMesh.vertices;
+        initialVertices = currentVertices;
+        wasDisplaced = new bool[currentVertices.Length];
+        displacedVertices = new Vector3[currentVertices.Length];
+        uniformScale = transform.localScale.x;
+        for (int i = 0; i < currentVertices.Length; i++)
         {
-            displacedVertices[i] = originalVertices[i];
+            displacedVertices[i] = currentVertices[i];
             wasDisplaced[i] = false;
         }
-        vertexVelocities = new Vector3[originalVertices.Length];
-    }
-
-    private void Update()
-    {
-        uniformScale = transform.localScale.x;
-
-        //deformingMesh.vertices = displacedVertices;
-        //deformingMesh.RecalculateNormals();
+        vertexVelocities = new Vector3[currentVertices.Length];
     }
 
     private void UpdateVertex(int i)
     {
         Vector3 velocity = vertexVelocities[i];
-        Vector3 displacement = displacedVertices[i] - originalVertices[i];
+        Vector3 displacement = displacedVertices[i] - currentVertices[i];
         displacement *= uniformScale;
         velocity -= displacement; //* (springForce * Time.deltaTime);
         //velocity *= 1f - damping * Time.deltaTime;
         vertexVelocities[i] = velocity;
-        if (Vector3.Distance(displacement, initialVertices[i]) <=
-            maxDisplacement && wasDisplaced[i] == false)
-        {
-            wasDisplaced[i] = true;
-            displacedVertices[i] += velocity * (Time.deltaTime / uniformScale);
-            originalVertices[i] = displacedVertices[i];
-            
-            deformingMesh.vertices = displacedVertices;
-            deformingMesh.RecalculateNormals();
-        }
+        if (Vector3.Distance(displacement, initialVertices[i]) >
+            maxDisplacement && wasDisplaced[i]) return;
+        
+        wasDisplaced[i] = true;
+        displacedVertices[i] += velocity * uniformScale;
+        currentVertices[i] = displacedVertices[i];
     }
 
     private void AddForceToVertex(int i, Vector3 point, float force)
     {
         Vector3 pointToVertex = displacedVertices[i] - point;
         pointToVertex *= uniformScale;
-        float reducedForce = force / (1f + pointToVertex.sqrMagnitude);
-        float velocity = reducedForce * Time.deltaTime;
-        vertexVelocities[i] += pointToVertex.normalized * velocity;
+        float reducedForce = force / (1f + pointToVertex.sqrMagnitude) /1000;
+        vertexVelocities[i] += pointToVertex.normalized * reducedForce;
     }
 
     public void AddDeformingForce(Vector3 point, float force, float radius_from_point)
@@ -78,10 +66,11 @@ public class meshDeformer : MonoBehaviour
             {
                 continue;
             }
-            Debug.Log("vertice " + i + " was affected by this");
             AddForceToVertex(i, point, force);
             UpdateVertex(i);
         }
+        deformingMesh.vertices = displacedVertices;
+        deformingMesh.RecalculateNormals();
         GetComponent<MeshCollider>().sharedMesh = deformingMesh;
     }
 
